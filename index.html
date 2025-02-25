@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI-Powered Health Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header>
+        <h1>🩺 AI-Powered Health Predictor</h1>
+        <p>Enter your symptoms, and our AI will predict possible conditions.</p>
+      </header>
+
+      <main>
+        <form id="symptom-form">
+          <label for="symptoms">Enter Symptoms (comma-separated):</label>
+          <input
+            type="text"
+            id="symptoms"
+            placeholder="e.g., fever, cough, headache"
+            required
+          />
+          <button type="submit">Predict Disease</button>
+        </form>
+
+        <div id="result" class="hidden">
+          <h2>Possible Conditions:</h2>
+          <div id="prediction-list"></div>
+        </div>
+      </main>
+
+      <footer>
+        <p>
+          ⚕️ Always consult a healthcare professional for accurate diagnosis.
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      document
+        .getElementById("symptom-form")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const symptoms = document.getElementById("symptoms").value.trim();
+
+          if (symptoms.split(",").length < 3) {
+            alert("Please enter at least 3 symptoms.");
+            return;
+          }
+
+          const query = `possible disease for symptoms: ${symptoms}`;
+          const corsProxy = "https://cors-anywhere.herokuapp.com/"; // Free CORS proxy
+          const searchUrl = `${corsProxy}https://serpapi.com/search.json?q=${encodeURIComponent(
+            query
+          )}&hl=en&gl=us&api_key=682d3d7f9c0a062d0a466209981eca138887417d0565e26b680de7dbeb37d979`;
+
+          try {
+            const response = await fetch(searchUrl);
+            if (!response.ok) throw new Error("Failed to fetch");
+            const data = await response.json();
+            const results = data.organic_results?.slice(0, 3) || [];
+
+            const predictionList = document.getElementById("prediction-list");
+            predictionList.innerHTML = "";
+
+            if (results.length > 0) {
+              results.forEach((result) => {
+                const card = document.createElement("div");
+                card.classList.add("result-card");
+                card.innerHTML = `
+                            <h3>${result.title}</h3>
+                            <p>${
+                              result.snippet || "No description available."
+                            }</p>
+                            <a href="${
+                              result.link
+                            }" target="_blank">Read more</a>
+                        `;
+                predictionList.appendChild(card);
+              });
+            } else {
+              predictionList.innerHTML =
+                "<p>No clear results found. Try refining your symptoms.</p>";
+            }
+
+            document.getElementById("result").classList.remove("hidden");
+          } catch (error) {
+            document.getElementById("prediction-list").innerHTML =
+              "<p>Failed to fetch results. Please try again.</p>";
+            console.error("Error fetching results:", error);
+          }
+        });
+    </script>
+
+    <style>
+      /* CSS for styling */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #e0f7fa, #80deea);
+        color: #333;
+        text-align: center;
+      }
+
+      .app-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      header h1 {
+        color: #00796b;
+      }
+
+      form {
+        margin: 20px 0;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #00796b;
+        border-radius: 10px;
+      }
+
+      button {
+        background-color: #00796b;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #004d40;
+      }
+
+      #result {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #e0f2f1;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .result-card {
+        background-color: #ffffff;
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        text-align: left;
+      }
+
+      .result-card h3 {
+        color: #00796b;
+      }
+
+      .result-card a {
+        color: #0288d1;
+        text-decoration: none;
+      }
+
+      .result-card a:hover {
+        text-decoration: underline;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      footer {
+        margin-top: 30px;
+        font-size: 0.9em;
+        color: #666;
+      }
+    </style>
+  </body>
+</html>
